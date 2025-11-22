@@ -1,0 +1,11 @@
+pub mod warehouses;
+// pub mod auth;
+// pub mod products;
+// pub mod dashboard;
+// pub mod receipts;
+// pub mod deliveries;
+// pub mod transfers;
+// pub mod adjustments;
+pub mod users;
+pub mod products;
+pub mod receipts;

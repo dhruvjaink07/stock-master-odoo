@@ -1,0 +1,12 @@
+pub mod warehouse_repo;
+// pub mod user_repo;
+// pub mod product_repo;
+// pub mod stock_repo;
+// pub mod category_repo;
+// pub mod receipt_repo;
+// pub mod delivery_repo;
+// pub mod transfer_repo;
+// pub mod adjustment_repo;
+pub mod user_repo;
+pub mod product_repo;
+pub mod receipt_repo;
