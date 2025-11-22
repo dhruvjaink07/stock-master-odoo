@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: stockmaster-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: stockmaster
+      # Optional: Set timezone
+      TZ: UTC
+    ports:
+      - "5432:5432"
+    volumes:
+      # Persist database data even after container stops
+      - postgres_data:/var/lib/postgresql/data
+      # Optional: Mount initialization script
+      - ./prisma/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - stockmaster
+    restart: unless-stopped
+
+  # PgAdmin - Visual database management (optional)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: stockmaster-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@stockmaster.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - stockmaster
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  stockmaster:
+    driver: bridge

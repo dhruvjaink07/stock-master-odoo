@@ -1,0 +1,277 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// ============ AUTHENTICATION ============
+model User {
+  id        String     @id @default(cuid()) @map("_id")
+  email     String
+  password  String
+  name      String
+  role      Role       @default(USER)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([email])
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  USER
+}
+
+// ============ WAREHOUSES ============
+model Warehouse {
+  id        String     @id @default(cuid()) @map("_id")
+  name      String
+  location  String
+  capacity  Float      // Total capacity in kg
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  products StockLevel[]
+  transfers Transfer[]
+  createdTransfers Transfer[] @relation("from")
+  movements StockLedger[]
+
+  @@map("warehouses")
+}
+
+// ============ PRODUCTS ============
+model Product {
+  id                  String     @id @default(cuid()) @map("_id")
+  sku                 String
+  name                String
+  description         String?
+  category            String
+  reorderThreshold    Float      // Alert when stock falls below this
+  unitPrice           Float
+  decimals            Int        @default(2) // Decimal precision (2 for kg, 0 for units)
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  stockLevels StockLevel[]
+  ledgers     StockLedger[]
+  receiptItems ReceiptItem[]
+  transferItems TransferItem[]
+  deliveryItems DeliveryItem[]
+  adjustmentItems AdjustmentItem[]
+
+  @@index([category])
+  @@map("products")
+}
+
+// ============ STOCK LEVELS ============
+model StockLevel {
+  id          String     @id @default(cuid()) @map("_id")
+  productId   String
+  warehouseId String
+  quantity    Float      // Stored as decimal
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  product     Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouse   Warehouse   @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+
+  @@index([productId, warehouseId])
+  @@map("stock_levels")
+}
+
+// ============ STOCK LEDGER (AUDIT TRAIL) ============
+model StockLedger {
+  id            String     @id @default(cuid()) @map("_id")
+  productId     String
+  warehouseId   String
+  type          LedgerType // Receipt, Transfer, Delivery, Adjustment
+  quantity      Float      // Amount changed (can be negative)
+  previousQty   Float      // Qty before change
+  newQty        Float      // Qty after change
+  reference     String?    // Receipt ID, Transfer ID, Delivery ID, etc.
+  notes         String?
+  createdAt     DateTime   @default(now())
+
+  product     Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouse   Warehouse   @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([warehouseId])
+  @@index([createdAt])
+  @@index([type])
+  @@map("stock_ledger")
+}
+
+enum LedgerType {
+  RECEIPT
+  TRANSFER
+  DELIVERY
+  ADJUSTMENT
+}
+
+// ============ RECEIPTS ============
+model Receipt {
+  id            String     @id @default(cuid()) @map("_id")
+  receiptNumber String
+  status        ReceiptStatus @default(PENDING)
+  totalQuantity Float
+  notes         String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  items ReceiptItem[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("receipts")
+}
+
+enum ReceiptStatus {
+  PENDING
+  VALIDATED
+  REJECTED
+}
+
+model ReceiptItem {
+  id        String   @id @default(cuid()) @map("_id")
+  receiptId String
+  productId String
+  quantity  Float
+  warehouseId String
+
+  receipt   Receipt  @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("receipt_items")
+}
+
+// ============ TRANSFERS ============
+model Transfer {
+  id            String     @id @default(cuid()) @map("_id")
+  transferNumber String
+  fromWarehouseId String
+  toWarehouseId String
+  status        TransferStatus @default(PENDING)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  items TransferItem[]
+  fromWarehouse Warehouse @relation("from", fields: [fromWarehouseId], references: [id], onDelete: Cascade)
+  toWarehouse   Warehouse @relation(fields: [toWarehouseId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("transfers")
+}
+
+enum TransferStatus {
+  PENDING
+  IN_TRANSIT
+  COMPLETED
+  CANCELLED
+}
+
+model TransferItem {
+  id         String   @id @default(cuid()) @map("_id")
+  transferId String
+  productId  String
+  quantity   Float
+
+  transfer   Transfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("transfer_items")
+}
+
+// ============ DELIVERIES ============
+model Delivery {
+  id               String     @id @default(cuid()) @map("_id")
+  invoiceNumber    String
+  customerName     String
+  customerEmail    String?
+  status           DeliveryStatus @default(PENDING)
+  totalQuantity    Float
+  notes            String?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  items DeliveryItem[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("deliveries")
+}
+
+enum DeliveryStatus {
+  PENDING
+  PICKED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model DeliveryItem {
+  id         String   @id @default(cuid()) @map("_id")
+  deliveryId String
+  productId  String
+  quantity   Float
+  warehouseId String
+
+  delivery   Delivery @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("delivery_items")
+}
+
+// ============ ADJUSTMENTS ============
+model Adjustment {
+  id               String     @id @default(cuid()) @map("_id")
+  adjustmentNumber String
+  reason           AdjustmentReason
+  status           AdjustmentStatus @default(PENDING)
+  totalQuantity    Float
+  notes            String?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  items AdjustmentItem[]
+
+  @@index([reason])
+  @@index([status])
+  @@index([createdAt])
+  @@map("adjustments")
+}
+
+enum AdjustmentReason {
+  DAMAGE
+  EXPIRY
+  CORRECTION
+  LOSS
+}
+
+enum AdjustmentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model AdjustmentItem {
+  id           String   @id @default(cuid()) @map("_id")
+  adjustmentId String
+  productId    String
+  quantity     Float    // Negative for reduction
+  warehouseId  String
+
+  adjustment   Adjustment @relation(fields: [adjustmentId], references: [id], onDelete: Cascade)
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("adjustment_items")
+}
