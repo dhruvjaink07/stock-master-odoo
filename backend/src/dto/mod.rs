@@ -1,0 +1,10 @@
+pub mod warehouse_dto;
+// pub mod auth_dto;
+// pub mod product_dto;
+// pub mod receipt_dto;
+// pub mod delivery_dto;
+// pub mod transfer_dto;
+// pub mod adjustment_dto;
+pub mod user_dto;
+pub mod product_dto;
+pub mod receipt_dto;
