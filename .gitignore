@@ -1,0 +1,81 @@
+# ──────────────────────────────
+# Node.js / Dependencies
+# ──────────────────────────────
+node_modules/
+**/node_modules/
+
+# ──────────────────────────────
+# Build outputs
+# ──────────────────────────────
+.next/
+out/
+dist/
+build/
+**/dist/
+**/build/
+
+# ──────────────────────────────
+# Environment variables
+# ──────────────────────────────
+.env
+.env.local
+.env.*.local
+*/.env
+!.env.example
+
+# ──────────────────────────────
+# Prisma
+# ──────────────────────────────
+prisma/dev.db
+prisma/*.db
+prisma/migrations/
+**/prisma/migrations/
+*/prisma/dev.db
+
+# ──────────────────────────────
+# Logs & temp files
+# ──────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ──────────────────────────────
+# OS / Editor junk
+# ──────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# ──────────────────────────────
+# Vercel / Railway / Render
+# ──────────────────────────────
+.vercel
+.vercel_build_output/
+.vercel_build_cache/
+
+# ──────────────────────────────
+# TypeScript cache
+# ──────────────────────────────
+*.tsbuildinfo
+
+# ──────────────────────────────
+# Optional: testing artifacts
+# ──────────────────────────────
+/test-results/
+/playwright-report/
+/cypress/
+
+# ──────────────────────────────
+# Keep these example files
+# ──────────────────────────────
+!.env.example
+!frontend/.env.example
+!backend/.env.example
