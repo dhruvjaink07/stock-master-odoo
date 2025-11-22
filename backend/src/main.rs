@@ -1,3 +1,4 @@
+pub mod services;
 // src/main.rs
 
 mod app;

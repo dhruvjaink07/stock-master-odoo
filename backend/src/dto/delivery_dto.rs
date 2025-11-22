@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ReceiptDto {
+pub struct DeliveryDto {
     pub id: Option<i32>,
-    pub supplier_name: Option<String>,
+    pub customer_name: Option<String>,
     pub warehouse_id: Option<i32>,
     pub user_id: Option<i32>,
     pub status: Option<String>,
@@ -12,16 +12,16 @@ pub struct ReceiptDto {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct CreateReceiptRequest {
-    pub supplier_name: String,
+pub struct CreateDeliveryRequest {
+    pub customer_name: String,
     pub warehouse_id: i32,
     pub user_id: i32,
     pub status: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct UpdateReceiptRequest {
-    pub supplier_name: Option<String>,
+pub struct UpdateDeliveryRequest {
+    pub customer_name: Option<String>,
     pub warehouse_id: Option<i32>,
     pub user_id: Option<i32>,
     pub status: Option<String>,

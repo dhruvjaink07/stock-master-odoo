@@ -15,7 +15,7 @@ pub async fn create(pool: &DbPool, req: CreateReceiptRequest) -> Result<ReceiptD
     let rec = sqlx::query_as!(ReceiptDto,
         r#"INSERT INTO receipts (supplier_name, warehouse_id, user_id, status) VALUES ($1, $2, $3, $4)
         RETURNING id, supplier_name, warehouse_id, user_id, status, created_at, updated_at"#,
-        req.supplier_name, req.warehouse_id, req.user_id, req.status
+        req.supplier_name, req.warehouse_id, req.user_id, req.status.unwrap_or("".to_string())
     )
     .fetch_one(pool)
     .await?;
@@ -26,7 +26,7 @@ pub async fn update(pool: &DbPool, id: i32, req: UpdateReceiptRequest) -> Result
     let rec = sqlx::query_as!(ReceiptDto,
         r#"UPDATE receipts SET supplier_name = COALESCE($1, supplier_name), warehouse_id = COALESCE($2, warehouse_id), user_id = COALESCE($3, user_id), status = COALESCE($4, status), updated_at = NOW()
         WHERE id = $5 RETURNING id, supplier_name, warehouse_id, user_id, status, created_at, updated_at"#,
-        req.supplier_name, req.warehouse_id, req.user_id, req.status, id
+        req.supplier_name, req.warehouse_id, req.user_id, req.status.unwrap_or("".to_string()), id
     )
     .fetch_one(pool)
     .await?;

@@ -1,2 +1,2 @@
-// pub mod auth_service;
-// pub mod stock_service;
+pub mod auth_service;
+pub mod stock_service;
