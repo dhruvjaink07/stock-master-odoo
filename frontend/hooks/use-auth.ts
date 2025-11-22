@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import type { AuthUser, AuthState } from "@/lib/auth-utils"
 import { getStoredUser, setStoredUser, validateEmail, validatePassword } from "@/lib/auth-utils"
+import { loginAPI, signupAPI } from "@/lib/api"
 
 export const useAuth = () => {
   const [state, setState] = useState<AuthState>({
@@ -29,10 +30,15 @@ export const useAuth = () => {
       throw new Error("Password must be at least 6 characters")
     }
 
+    const response = await signupAPI(email, password, name)
+
+    // Store token and user
+    localStorage.setItem("authToken", response.token)
+
     const user: AuthUser = {
-      id: Math.random().toString(36).substr(2, 9),
-      email,
-      name,
+      id: response.user.id,
+      email: response.user.email,
+      name: response.user.name,
     }
 
     setStoredUser(user)
@@ -53,11 +59,15 @@ export const useAuth = () => {
       throw new Error("Invalid password")
     }
 
-    // Mock login - in production, validate against backend
+    const response = await loginAPI(email, password)
+
+    // Store token and user
+    localStorage.setItem("authToken", response.token)
+
     const user: AuthUser = {
-      id: Math.random().toString(36).substr(2, 9),
-      email,
-      name: email.split("@")[0],
+      id: response.user.id,
+      email: response.user.email,
+      name: response.user.name,
     }
 
     setStoredUser(user)
@@ -71,6 +81,7 @@ export const useAuth = () => {
   }, [])
 
   const logout = useCallback(() => {
+    localStorage.removeItem("authToken")
     setStoredUser(null)
     setState({
       user: null,
